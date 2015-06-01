@@ -51,7 +51,7 @@ module SinatraWebsocket
 
       # Standard 400 response
       def failure_response
-        [ 400, {'Content-Type' => 'text/plain'}, [ 'Bad request' ] ]
+        [ 400, {'Content-Type' => 'text/plain'}, [ 'Bad request: could not dispatch socket' ] ]
       end
     end # class << self
 
