@@ -93,11 +93,17 @@ module SinatraWebsocket
     # set all standard options and disable
     # EM connection inactivity timeout
     def initialize(app, socket, options = {})
-      @app     = app
-      @socket  = socket
+      @app = app
+      @socket = socket
       @options = options
-      @debug   = options[:debug] || false
-      @ssl     = socket.backend.respond_to?(:ssl?) && socket.backend.ssl?
+      @debug = options[:debug] || false
+      @secure = socket.backend.respond_to?(:ssl?) && socket.backend.ssl?
+      @secure_proxy = options[:secure_proxy] || false
+      @tls_options = options[:tls_options] || {}
+      @close_timeout = options[:close_timeout]
+      @outbound_limit = options[:outbound_limit] || 0
+
+      @handler = nil
 
       socket.websocket = self
       socket.comm_inactivity_timeout = 0
@@ -107,21 +113,6 @@ module SinatraWebsocket
 
     def get_peername
       @socket.get_peername
-    end
-
-    # Overwrite dispath from em-websocket
-    # we already have request headers parsed so
-    # we can skip it and call build_with_request
-    def dispatch(data)
-      return false if data.nil?
-      debug [:inbound_headers, data]
-      @handler = EventMachine::WebSocket::HandlerFactory.build_with_request(self, data, data['Body'], @ssl, @debug)
-      unless @handler
-        # The whole header has not been received yet.
-        return false
-      end
-      @handler.run
-      return true
     end
   end
 end # module::SinatraWebSocket
