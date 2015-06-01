@@ -93,14 +93,20 @@ module SinatraWebsocket
     # set all standard options and disable
     # EM connection inactivity timeout
     def initialize(app, socket, options = {})
-      @app     = app
-      @socket  = socket
-      @options = options
-      @debug   = options[:debug] || false
-      @ssl     = socket.backend.respond_to?(:ssl?) && socket.backend.ssl?
-
       socket.websocket = self
       socket.comm_inactivity_timeout = 0
+
+      @app = app
+      @socket = socket
+      @options = options
+      @debug = options[:debug] || false
+      @secure = socket.backend.respond_to?(:ssl?) && socket.backend.ssl?
+      @secure_proxy = options[:secure_proxy] || false
+      @tls_options = options[:tls_options] || {}
+      @close_timeout = options[:close_timeout]
+      @outbound_limit = options[:outbound_limit] || 0
+
+      @handler = nil
 
       debug [:initialize]
     end
@@ -114,6 +120,7 @@ module SinatraWebsocket
       return false if data.nil?
       debug [:inbound_headers, data]
       super data['Body']
+      true
     end
   end
 end # module::SinatraWebSocket
